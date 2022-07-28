@@ -1,5 +1,6 @@
 #include <iostream>
 #include <string>
+#include <cmath>
 #include "transport_catalogue.h"
 
 void dbw_request_parsing (const std::string& input_string, TransportCatalogue& catalogue) {
@@ -37,21 +38,25 @@ void dbw_request_parsing (const std::string& input_string, TransportCatalogue& c
         }
     } else if (input_string.substr(0, 4) == "Stop"){
         BusStop bus_stop;
+        Coordinates coordinates{};
         auto colon_pos = input_string.find(':');
         auto comma_pos = input_string.find_first_of(',');
         bus_stop.SetStopName(input_string.substr(5, colon_pos - 5));
-        double double_first = std::stoi(input_string.substr(colon_pos + 2, comma_pos - colon_pos - 2));
-        double double_second = std::stoi(input_string.substr(comma_pos + 2));
-        bus_stop.setStopCoordinates({double_first, double_second});
+        std::string c_first = input_string.substr(colon_pos + 2, comma_pos - colon_pos - 2);
+        std::string c_second = input_string.substr(comma_pos + 2);
+        coordinates.lat = std::stod(c_first);
+        coordinates.lng = std::stod(c_second);
+        bus_stop.setStopCoordinates(coordinates);
         catalogue.SetStop(bus_stop);
     }
 }
 
 void dbw_data_input (TransportCatalogue& catalogue) {
     int request_count;
-    std::cin >> request_count;
     std::string input_string;
-    for (int i = 0; i <= request_count; i++){
+    getline (std::cin, input_string);
+    request_count = stoi(input_string);
+    for (int i = 0; i < request_count; i++){
         getline (std::cin, input_string);
         dbw_request_parsing (input_string, catalogue);
     }
