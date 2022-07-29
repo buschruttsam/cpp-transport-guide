@@ -13,10 +13,23 @@ public:
 
     void SetStop(const std::string& bus_stop, Coordinates coordinates){
         stops_data_[bus_stop] = coordinates;
+        stop_to_buses_[bus_stop];
     }
     void SetBus(const std::string& bus_name, const std::vector<std::string>& bus, bool if_chain){
         bus_types_[bus_name] = if_chain;
         buses_data_[bus_name] = bus;
+        for (const std::string& stop : bus){
+            stop_to_buses_[stop].insert(bus_name);
+        }
+    }
+
+    std::set<std::string> GetStopBuses(const std::string& stop_name){
+        std::set<std::string> dummy;
+        if (stop_to_buses_.count(stop_name) < 1){
+            dummy.insert(":");
+            return dummy;
+        }
+        return stop_to_buses_.at(stop_name);
     }
 
     size_t BusStopCount(const std::string &bus_name){
@@ -55,6 +68,8 @@ public:
 
 private:
     std::unordered_map<std::string, Coordinates> stops_data_;
+    std::unordered_map<std::string, std::set<std::string>> stop_to_buses_;
+    std::unordered_map<std::pair<std::string, std::string>, double> stop_distances_;
     std::unordered_map<std::string, std::vector<std::string>> buses_data_;
     std::unordered_map<std::string, bool> bus_types_;
 };
