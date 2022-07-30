@@ -15,6 +15,9 @@ public:
         stops_data_[bus_stop] = coordinates;
         stop_to_buses_[bus_stop];
     }
+    void SetStopDistance(const std::string& origin_name, const std::string& destination_name, double length){
+        stop_distances_[{origin_name, destination_name}] = length;
+    }
     void SetBus(const std::string& bus_name, const std::vector<std::string>& bus, bool if_chain){
         bus_types_[bus_name] = if_chain;
         buses_data_[bus_name] = bus;
@@ -51,25 +54,43 @@ public:
         return uniq_stops.size();
     };
 
-    double BusRouteLength(const std::string &bus_name){
+    std::pair<double, double> BusRouteLength(const std::string &bus_name){
+        double route_length = 0.0;
+        std::pair<std::string, std::string> key;
+        for (int i = 1; i < buses_data_.at(bus_name).size(); i++){
+            key.second = buses_data_.at(bus_name)[i];
+            key.first = buses_data_.at(bus_name)[i - 1];
+            if (stop_distances_.count(key) < 1){
+                route_length += stop_distances_.at({key.second, key.first});
+            } else {
+                route_length += stop_distances_.at(key);
+            }
+            if (bus_types_.at(bus_name)){
+                if (stop_distances_.count({key.second, key.first}) < 1){
+                    route_length += stop_distances_.at(key);
+                } else {
+                    route_length += stop_distances_.at({key.second, key.first});
+                }
+            }
+        }
         Coordinates c_origin{};
         Coordinates c_destination{};
-        double route_length = 0.0;
+        double chord_route_length = 0.0;
         for (int i = 1; i < buses_data_.at(bus_name).size(); i++){
             c_destination = stops_data_[buses_data_.at(bus_name)[i]];
             c_origin = stops_data_[buses_data_.at(bus_name)[i-1]];
-            route_length += ComputeDistance(c_origin, c_destination);
+            chord_route_length += ComputeDistance(c_origin, c_destination);
         }
         if (bus_types_.at(bus_name)){
-            route_length += route_length;
+            chord_route_length += chord_route_length;
         }
-        return route_length;
+        return {route_length, route_length / chord_route_length};
     };
 
 private:
     std::unordered_map<std::string, Coordinates> stops_data_;
     std::unordered_map<std::string, std::set<std::string>> stop_to_buses_;
-    std::unordered_map<std::pair<std::string, std::string>, double> stop_distances_;
+    std::map<std::pair<std::string, std::string>, double> stop_distances_;
     std::unordered_map<std::string, std::vector<std::string>> buses_data_;
     std::unordered_map<std::string, bool> bus_types_;
 };

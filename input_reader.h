@@ -38,12 +38,40 @@ void dbw_request_parsing (const std::string& input_string, TransportCatalogue& c
     } else if (input_string.substr(0, 4) == "Stop"){
         Coordinates coordinates{};
         auto colon_pos = input_string.find(':');
-        auto comma_pos = input_string.find_first_of(',');
-        std::string c_first = input_string.substr(colon_pos + 2, comma_pos - colon_pos - 2);
-        std::string c_second = input_string.substr(comma_pos + 2);
-        coordinates.lat = std::stod(c_first);
-        coordinates.lng = std::stod(c_second);
-        catalogue.SetStop(input_string.substr(5, colon_pos - 5), coordinates);
+        std::string stop_name = input_string.substr(5, colon_pos - 5);
+        std::string value_string = input_string.substr(colon_pos + 1);
+        std::string word_to_push;
+        std::vector<double> vector_coordinates;
+        int count = 0;
+        for (char char_value : value_string){
+            if (char_value != ','){
+                word_to_push += char_value;
+            } else {
+                if(count < 2){
+                    vector_coordinates.push_back(std::stod(word_to_push.substr(1)));
+                    word_to_push.clear();
+                    count++;
+                    if(count == 2){
+                        coordinates.lat = vector_coordinates[0];
+                        coordinates.lng = vector_coordinates[1];
+                        catalogue.SetStop(stop_name, coordinates);
+                    }
+                } else {
+                    catalogue.SetStopDistance(stop_name, word_to_push.substr(word_to_push.find('m') + 5),
+                    stod(word_to_push.substr(1, word_to_push.find('m') - 1)));
+                    word_to_push.clear();
+                }
+            }
+        }
+        if(count < 2){
+            vector_coordinates.push_back(std::stod(word_to_push.substr(1)));
+            coordinates.lat = vector_coordinates[0];
+            coordinates.lng = vector_coordinates[1];
+            catalogue.SetStop(stop_name, coordinates);
+        } else {
+            catalogue.SetStopDistance(stop_name, word_to_push.substr(word_to_push.find('m') + 5),
+            stod(word_to_push.substr(1, word_to_push.find('m') - 1)));
+        }
     }
 }
 
@@ -57,3 +85,4 @@ void dbw_data_input (TransportCatalogue& catalogue) {
         dbw_request_parsing (input_string, catalogue);
     }
 }
+

@@ -15,7 +15,8 @@ void dbr_request_processing (const std::string& input_string, TransportCatalogue
         std::cout << input_string << ": ";
         std::cout << catalogue.BusStopCount(bus_name) << " stops on route, ";
         std::cout << catalogue.BusUniqStopCount(bus_name) << " unique stops, ";
-        std::cout << catalogue.BusRouteLength(bus_name) << " route length";
+        std::cout << catalogue.BusRouteLength(bus_name).first << " route length, ";
+        std::cout << catalogue.BusRouteLength(bus_name).second << " curvature";
         std::cout << std::endl;
     } else {
         std::string stop_name = input_string.substr(5);
